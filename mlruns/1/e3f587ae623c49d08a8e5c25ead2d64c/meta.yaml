@@ -1,0 +1,15 @@
+artifact_uri: file:///home/vini/code/VPeron/TaxiFareModel/mlruns/1/e3f587ae623c49d08a8e5c25ead2d64c/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: e3f587ae623c49d08a8e5c25ead2d64c
+run_uuid: e3f587ae623c49d08a8e5c25ead2d64c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1634731011450
+status: 1
+tags: []
+user_id: unknown
