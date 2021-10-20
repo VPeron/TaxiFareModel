@@ -20,15 +20,6 @@ class Trainer():
         self.pipeline = None
         self.X = X
         self.y = y
-        
-    # def data_split(self, df):
-    #     self.X = df.drop('fare_amount', axis=1)
-    #     self.y = df['fare_amount']
-    #     return self.X, self.y
-    
-    # def hold_out(self):
-    #     self.X_train, self.y_train, self.X_test, self.y_test = train_test_split(self.X, self.y, test_size=0.3)
-    #     return self.X_train, self.y_train, self.X_test, self.y_test
 
     def set_pipeline(self):
         """defines the pipeline as a class attribute"""
