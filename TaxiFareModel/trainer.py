@@ -15,6 +15,7 @@ from mlflow.tracking import MlflowClient
 
 #
 from memoized_property import memoized_property
+import xgboost as xgb
 
 
 class Trainer():
@@ -31,8 +32,10 @@ class Trainer():
         self.X = X
         self.y = y
 
-    def set_pipeline(self, model=None):
+    def set_pipeline(self, model):
         """defines the pipeline as a class attribute"""
+        self.model = model
+        
         dist_pipe = Pipeline([
         ('dist_trans', DistanceTransformer()),
         ('stdscaler', StandardScaler())
@@ -51,21 +54,23 @@ class Trainer():
             ('time', time_pipe, ['pickup_datetime'])
         ], remainder="drop")
         
-        # if model == 'linear':
+        if model == 'linear':
         
-        self.pipeline = Pipeline([
-            ('preproc', preproc_pipe),
-            ('linear_model', LinearRegression())
-        ])
-        # else:
-        #     self.pipeline = Pipeline([
-        #         ('preproc', preproc_pipe),
-        #         ('XGbooster', LinearRegression())
-        #     ])
+            self.pipeline = Pipeline([
+                ('preproc', preproc_pipe),
+                ('linear_model', LinearRegression())
+            ])
+        if model == 'xgb':
+            self.pipeline = Pipeline([
+                ('preproc', preproc_pipe),
+                ('XGbooster', xgb.XGBRegressor(objective ='reg:squarederror',
+                  n_estimators = 10, seed = 123))
+            ])
+        
 
-    def run(self):
-        """set and train the pipeline"""
-        self.set_pipeline()
+    def run(self, model='linear'):
+        """set and train the pipeline - deafult model is linear regression"""
+        self.set_pipeline(model)
         self.pipeline.fit(self.X, self.y)
 
     def evaluate(self, X_test, y_test):
@@ -73,7 +78,6 @@ class Trainer():
         y_pred = self.pipeline.predict(X_test)
         rmse = compute_rmse(y_pred, y_test)
         return rmse
-    
     
     @memoized_property
     def mlflow_client(self):
@@ -99,25 +103,28 @@ class Trainer():
 
 
 if __name__ == "__main__":
-    N = 1_000
+    N = 10_000
     df = get_data(nrows=N)
     df = clean_data(df)
     y = df["fare_amount"]
     X = df.drop("fare_amount", axis=1)
     
+    
+    
     from sklearn.model_selection import train_test_split
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     trainer = Trainer(X_train, y_train)
     trainer.run()
-    
+    # print(trainer.__dict__)  # debugger
     rmse = trainer.evaluate(X_test, y_test)
     print(f"rmse: {round(rmse, 2)}")
     
-    trainer.mlflow_log_param("model", 'LinearRegression')
+    trainer.mlflow_log_param("model", f'{trainer.model}')
     trainer.mlflow_log_metric("rmse", rmse)
     
     # retrieve id for easy access in mlflow API
     experiment_id = trainer.mlflow_experiment_id
     print(f"experiment URL: https://mlflow.lewagon.co/#/experiments/{experiment_id}")
 
-
+#TODO add log_tag to improve logging
+#TODO add trainings list of dicts params - see recap
