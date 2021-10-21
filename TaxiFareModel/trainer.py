@@ -31,7 +31,7 @@ class Trainer():
         self.X = X
         self.y = y
 
-    def set_pipeline(self):
+    def set_pipeline(self, model=None):
         """defines the pipeline as a class attribute"""
         dist_pipe = Pipeline([
         ('dist_trans', DistanceTransformer()),
@@ -51,10 +51,17 @@ class Trainer():
             ('time', time_pipe, ['pickup_datetime'])
         ], remainder="drop")
         
+        # if model == 'linear':
+        
         self.pipeline = Pipeline([
             ('preproc', preproc_pipe),
             ('linear_model', LinearRegression())
         ])
+        # else:
+        #     self.pipeline = Pipeline([
+        #         ('preproc', preproc_pipe),
+        #         ('XGbooster', LinearRegression())
+        #     ])
 
     def run(self):
         """set and train the pipeline"""
@@ -92,7 +99,7 @@ class Trainer():
 
 
 if __name__ == "__main__":
-    N = 10_000
+    N = 1_000
     df = get_data(nrows=N)
     df = clean_data(df)
     y = df["fare_amount"]
@@ -106,8 +113,7 @@ if __name__ == "__main__":
     rmse = trainer.evaluate(X_test, y_test)
     print(f"rmse: {round(rmse, 2)}")
     
-    # trainer.mlflow_run()  # how to init the run? -> currently no errors are thrown but the run is not logged.
-    trainer.mlflow_log_param("linear_model", LinearRegression)  
+    trainer.mlflow_log_param("model", 'LinearRegression')
     trainer.mlflow_log_metric("rmse", rmse)
     
     # retrieve id for easy access in mlflow API
